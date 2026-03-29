@@ -1,0 +1,7 @@
+﻿node_modules/
+sample-workspaces/
+src/
+.vscode-test/
+.vscode/
+tsconfig.json
+"*.map"

@@ -1,0 +1,87 @@
+{
+  "name": "terminal-npm-intellisense",
+  "displayName": "Terminal NPM IntelliSense",
+  "description": "Autocomplete npm run scripts directly in the VS Code terminal. Supports npm, pnpm, yarn, and bun.",
+  "version": "0.0.1",
+  "publisher": "OMouta",
+  "engines": {
+    "vscode": "^1.110.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "npm",
+    "node",
+    "terminal",
+    "intellisense",
+    "autocomplete",
+    "scripts",
+    "npm run",
+    "pnpm",
+    "yarn",
+    "bun"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Terminal NPM IntelliSense",
+      "properties": {
+        "terminalNpmIntellisense.excludePatterns": {
+          "type": "array",
+          "default": [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/build/**"
+          ],
+          "description": "Glob patterns to exclude when scanning for package.json workspaces."
+        },
+        "terminalNpmIntellisense.enabledManagers": {
+          "type": "array",
+          "default": [
+            "npm",
+            "yarn",
+            "pnpm",
+            "bun"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "npm",
+              "yarn",
+              "pnpm",
+              "bun"
+            ]
+          },
+          "description": "Package managers to provide autocompletion for."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.110.0",
+    "@vscode/test-electron": "^2.5.2",
+    "glob": "^13.0.6",
+    "mocha": "^11.7.5",
+    "typescript": "^5.1.3"
+  },
+  "enabledApiProposals": [
+    "terminalCompletionProvider"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OMouta/terminal-npm-intellisense.git"
+  },
+  "license": "MIT"
+}

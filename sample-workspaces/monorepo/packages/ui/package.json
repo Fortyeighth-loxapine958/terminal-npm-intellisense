@@ -1,0 +1,10 @@
+﻿{
+  "name": "@sample/ui",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "storybook dev -p 6006",
+    "build": "storybook build",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  }
+}

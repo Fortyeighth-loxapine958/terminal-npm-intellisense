@@ -1,0 +1,21 @@
+{
+  "name": "sample-single-repo",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "build": "webpack --mode production",
+    "lint": "eslint .",
+    "format": "prettier --write \"**/*.js\""
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "express": "^5.2.1",
+    "prisma": "^7.6.0",
+    "react": "^19.2.4",
+    "tailwindcss": "^4.2.2",
+    "zod": "^4.3.6"
+  }
+}
