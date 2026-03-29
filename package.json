@@ -3,7 +3,7 @@
   "displayName": "Terminal NPM IntelliSense",
   "description": "Autocomplete npm run scripts directly in the VS Code terminal. Supports npm, pnpm, yarn, and bun.",
   "icon": "assets/icon.png",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "OMouta",
   "engines": {
     "vscode": "^1.110.0"
