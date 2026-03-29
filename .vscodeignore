@@ -4,4 +4,7 @@ src/
 .vscode-test/
 .vscode/
 tsconfig.json
-"*.map"
+**/*.map
+out/test/
+.gitignore
+CONTRIBUTING.md
