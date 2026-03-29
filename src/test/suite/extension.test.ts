@@ -4,7 +4,7 @@ import { getCompletions } from '../../extension';
 
 suite('Terminal Completion Logic', () => {
 
-    const testWorkspaceRoot = path.join(__dirname, '../../../sample-workspace/test-workspace');
+    const testWorkspaceRoot = path.join(__dirname, '../../../sample-workspaces/test-workspace');
     const scriptsCacheMap = new Map<string, Record<string, string>>();
 
     setup(() => {
@@ -16,7 +16,7 @@ suite('Terminal Completion Logic', () => {
         if ('items' in completions) { completions = completions.items; }
         assert.strictEqual(completions.length, 2);
         assert.strictEqual(completions[0].label, 'build');
-        assert.strictEqual(completions[1].label, '? test');
+        assert.strictEqual(completions[1].label, 'test');
     });
 
     test('npm run filtered suggestions', async () => {

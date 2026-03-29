@@ -3,7 +3,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 
 const scriptsCache = new Map<string, Record<string, string>>();
-const dependenciesCache = new Map<string, string[]>();
+const dependenciesCache = new Map<string, {name: string, type: string, version?: string}[]>();
 const binCache = new Map<string, string[]>();
 let workspacePackagesCache: Map<string, string> | undefined = undefined;
 
@@ -216,7 +216,7 @@ export async function getCompletions(
 
 async function getDependencyCompletions(cwd: string, prefix: string, replacementRange: readonly [number, number]): Promise<vscode.TerminalCompletionList> {
     let currentDir = cwd;
-    let deps: string[] = [];
+    let deps: {name: string, type: string, version?: string}[] = [];
 
     while (true) {
         if (dependenciesCache.has(currentDir)) {
@@ -228,10 +228,31 @@ async function getDependencyCompletions(cwd: string, prefix: string, replacement
         try {
             const packageJsonContent = await fs.readFile(packageJsonPath, 'utf8');
             const pkg = JSON.parse(packageJsonContent.replace(/^\uFEFF/, ''));
-            const d = Object.keys(pkg.dependencies || {});
-            const dd = Object.keys(pkg.devDependencies || {});
-            const pd = Object.keys(pkg.peerDependencies || {});
-            deps = Array.from(new Set([...d, ...dd, ...pd]));
+            const depsMap = new Map<string, {name: string, type: string, version?: string}>();
+
+            const addDeps = async (obj: any, typeName: string) => {
+                if (!obj) return;
+                for (const dep of Object.keys(obj)) {
+                    if (!depsMap.has(dep)) {
+                        let version: string | undefined;
+                        try {
+                            const depPkgPath = path.join(currentDir, 'node_modules', dep, 'package.json');
+                            const depPkgContent = await fs.readFile(depPkgPath, 'utf8');
+                            const depPkg = JSON.parse(depPkgContent.replace(/^\uFEFF/, ''));
+                            version = depPkg.version;
+                        } catch (e) {
+                            version = undefined;
+                        }
+                        depsMap.set(dep, { name: dep, type: typeName, version });
+                    }
+                }
+            };
+
+            await addDeps(pkg.dependencies, 'dependencies');
+            await addDeps(pkg.devDependencies, 'devDependencies');
+            await addDeps(pkg.peerDependencies, 'peerDependencies');
+
+            deps = Array.from(depsMap.values());
             dependenciesCache.set(currentDir, deps);
             break;
         } catch (err) {
@@ -243,13 +264,17 @@ async function getDependencyCompletions(cwd: string, prefix: string, replacement
 
     const completions: vscode.TerminalCompletionItem[] = [];
     for (const dep of deps) {
-        if (prefix && !dep.startsWith(prefix)) continue;
+        if (prefix && !dep.name.startsWith(prefix)) continue;
         const item = new vscode.TerminalCompletionItem(
-            dep,
+            dep.name,
             replacementRange,
             vscode.TerminalCompletionItemKind.Method
         );
-        item.detail = 'Dependency';
+        let detail = dep.type;
+        if (dep.version) {
+            detail += ` • v${dep.version}`;
+        }
+        item.detail = detail;
         completions.push(item);
     }
     return new vscode.TerminalCompletionList(completions, { showFiles: false, showDirectories: false, cwd: vscode.Uri.file(cwd) });
@@ -370,16 +395,104 @@ export function activate(context: vscode.ExtensionContext) {
         const excludes = config.get<string[]>('excludePatterns') || ['**/node_modules/**', '**/dist/**', '**/build/**'];
         const excludePattern = '{' + excludes.join(',') + '}';
 
-        try {
-            const uris = await vscode.workspace.findFiles('**/package.json', excludePattern);
+        let foundAnyWorkspaceConfig = false;
+
+        const parsePackages = async (uris: vscode.Uri[]) => {
             for (const uri of uris) {
                 try {
                     const content = await fs.readFile(uri.fsPath, 'utf8');
                     const pkg = JSON.parse(content.replace(/^\uFEFF/, ''));
-                    if (pkg && typeof pkg.name === 'string') workspacePackagesCache.set(pkg.name, path.dirname(uri.fsPath));
+                    if (pkg && typeof pkg.name === 'string') {
+                        workspacePackagesCache!.set(pkg.name, path.dirname(uri.fsPath));
+                    }
                 } catch {}
             }
+        };
+
+        try {
+            for (const folder of vscode.workspace.workspaceFolders) {
+                let workspaces: string[] = [];
+
+                // 1. package.json workspaces
+                try {
+                    const pkgPath = path.join(folder.uri.fsPath, 'package.json');
+                    const pkgContent = await fs.readFile(pkgPath, 'utf8');
+                    const pkg = JSON.parse(pkgContent.replace(/^\uFEFF/, ''));
+                    if (pkg.workspaces) {
+                        if (Array.isArray(pkg.workspaces)) {
+                            workspaces.push(...pkg.workspaces);
+                        } else if (Array.isArray(pkg.workspaces.packages)) {
+                            workspaces.push(...pkg.workspaces.packages);
+                        }
+                    }
+                } catch {}
+
+                // 2. pnpm-workspace.yaml
+                try {
+                    const pnpmPath = path.join(folder.uri.fsPath, 'pnpm-workspace.yaml');
+                    const pnpmContent = await fs.readFile(pnpmPath, 'utf8');
+                    const lines = pnpmContent.split('\n');
+                    let inPackages = false;
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (trimmed === 'packages:') {
+                            inPackages = true;
+                            continue;
+                        }
+                        if (inPackages) {
+                            if (trimmed.startsWith('-')) {
+                                const packageStr = trimmed.slice(1).trim().replace(/['"]/g, '');
+                                if (packageStr && !packageStr.startsWith('#')) {
+                                    workspaces.push(packageStr);
+                                }
+                            } else if (trimmed && !trimmed.startsWith('#')) {
+                                inPackages = false;
+                            }
+                        }
+                    }
+                } catch {}
+
+                // 3. lerna.json
+                try {
+                    const lernaPath = path.join(folder.uri.fsPath, 'lerna.json');
+                    const lernaContent = await fs.readFile(lernaPath, 'utf8');
+                    const lerna = JSON.parse(lernaContent.replace(/^\uFEFF/, ''));
+                    if (Array.isArray(lerna.packages)) {
+                        workspaces.push(...lerna.packages);
+                    }
+                } catch {}
+
+                if (workspaces.length > 0) {
+                    foundAnyWorkspaceConfig = true;
+                    const workspacePatterns = workspaces.map(w => {
+                        let normalized = w.replace(/\\/g, '/');
+                        if (normalized.endsWith('/')) {
+                            normalized = normalized.slice(0, -1);
+                        }
+                        if (!normalized.endsWith('package.json')) {
+                            normalized = `${normalized}/package.json`;
+                        }
+                        return normalized;
+                    });
+                    
+                    const pattern = workspacePatterns.length === 1 
+                        ? workspacePatterns[0] 
+                        : `{${workspacePatterns.join(',')}}`;
+                    const relativePattern = new vscode.RelativePattern(folder, pattern);
+                    
+                    try {
+                        const uris = await vscode.workspace.findFiles(relativePattern, excludePattern);
+                        await parsePackages(uris);
+                    } catch {}
+                }
+            }
+
+            if (!foundAnyWorkspaceConfig) {
+                const uris = await vscode.workspace.findFiles('**/package.json', excludePattern);
+                await parsePackages(uris);
+            }
         } catch {}
+
         return workspacePackagesCache;
     };
 
